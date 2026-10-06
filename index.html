@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GourmetAI - Smart Food & Recipe Recommendation System</title>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#FFF5F0',
+                            100: '#FFEADF',
+                            200: '#FFD4C2',
+                            500: '#FF6B35',
+                            600: '#E85520',
+                            700: '#C23D0D',
+                            dark: '#1C1917',
+                        },
+                        surface: {
+                            50: '#FAFAF9',
+                            100: '#F5F5F4',
+                            200: '#E7E5E4',
+                            card: '#FFFFFF',
+                        }
+                    },
+                    borderRadius: {
+                        '2xl': '1rem',
+                        '3xl': '1.5rem',
+                        '4xl': '2rem',
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 30px -5px rgba(255, 107, 53, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03)',
+                        'card': '0 4px 20px 0px rgba(0, 0, 0, 0.04)',
+                        'modal': '0 25px 50px -12px rgba(28, 25, 23, 0.25)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom smooth scrollbar & animations */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F5F5F4;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D6D3D1;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF6B35;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-backdrop {
+            background-color: rgba(28, 25, 23, 0.6);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body class="bg-surface-50 text-stone-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-stone-200/60">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/25">
+                    <i data-lucide="utensils-crossed" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold tracking-tight text-stone-900 block leading-none">Gourmet<span class="text-brand-500">AI</span></span>
+                    <span class="text-xs font-semibold text-stone-400 tracking-wider uppercase">Recommendation System</span>
+                </div>
+            </div>
+
+            <!-- Header Quick Stats / Badges -->
+            <div class="hidden md:flex items-center gap-6">
+                <div class="flex items-center gap-2 text-stone-600 bg-stone-100/80 px-4 py-2 rounded-full text-xs font-semibold">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-brand-500"></i>
+                    <span>Content-Based Matching</span>
+                </div>
+                <div class="flex items-center gap-2 text-stone-600 bg-brand-50 px-4 py-2 rounded-full text-xs font-semibold text-brand-700">
+                    <i data-lucide="book-open" class="w-4 h-4 text-brand-500"></i>
+                    <span id="recipeCountBadge">12 Master Recipes Loaded</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Hero Feature Card with Image -->
+        <div class="relative overflow-hidden rounded-4xl bg-stone-900 text-white shadow-soft min-h-[300px] flex items-center">
+            <!-- Background Image with Overlay -->
+            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=80" 
+                 alt="Delicious gourmet food spread" 
+                 class="absolute inset-0 w-full h-full object-cover object-center opacity-40 hover:scale-105 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-r from-stone-950 via-stone-900/80 to-transparent"></div>
+            
+            <!-- Hero Content -->
+            <div class="relative z-10 p-8 sm:p-12 max-w-2xl space-y-4">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/20 text-brand-200 border border-brand-500/30 text-xs font-bold uppercase tracking-wider">
+                    <i data-lucide="chef-hat" class="w-4 h-4 text-brand-500"></i> Smart Pantry Engine
+                </div>
+                <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+                    Turn your available ingredients into culinary perfection.
+                </h1>
+                <p class="text-stone-300 text-sm sm:text-base leading-relaxed">
+                    Select what you have in your fridge. Our intelligent content-based engine ranks dishes by match precision, minimizing food waste and maximizing flavor.
+                </p>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Control Panel (Pantry + Filter Toolbar) -->
+        <section class="bg-white rounded-3xl border border-stone-200/80 shadow-soft p-6 sm:p-8 space-y-6">
+            
+            <!-- 1. Ingredient Input Section -->
+            <div class="space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <label class="text-base font-bold text-stone-900 flex items-center gap-2">
+                        <i data-lucide="shopping-bag" class="w-5 h-5 text-brand-500"></i>
+                        Select Your Pantry Ingredients
+                    </label>
+                    <span class="text-xs text-stone-400 font-medium">Click ingredients below or add custom items</span>
+                </div>
+
+                <!-- Quick Select Tags -->
+                <div id="ingredientPillsContainer" class="flex flex-wrap gap-2 pt-1">
+                    <!-- Dynamic Pills inserted by JS -->
+                </div>
+
+                <!-- Custom Ingredient Input Bar -->
+                <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                    <div class="relative flex-1 w-full">
+                        <i data-lucide="plus-circle" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                        <input type="text" id="customIngredientInput" 
+                               placeholder="Type extra ingredients (e.g., garlic, oregano, butter) and press Enter or Add..." 
+                               class="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+                    </div>
+                    <button id="addCustomIngredientBtn" 
+                            class="w-full sm:w-auto px-6 py-3 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold rounded-2xl transition-all flex items-center justify-center gap-2 shadow-sm shrink-0">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add Ingredient
+                    </button>
+                </div>
+
+                <!-- Active Ingredients Summary Bar -->
+                <div id="activeIngredientsBar" class="hidden pt-3 border-t border-stone-100 flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-stone-400 mr-2">Active Pantry:</span>
+                    <div id="activeTagsWrapper" class="flex flex-wrap gap-1.5"></div>
+                    <button id="clearAllIngredientsBtn" class="text-xs font-semibold text-brand-600 hover:text-brand-700 ml-auto underline">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
+            <hr class="border-stone-100">
+
+            <!-- 2. Dashboard Inline Filters Grid -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-stone-400 flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-4 h-4 text-brand-500"></i> Preference Filters
+                    </span>
+                    <button id="resetFiltersBtn" class="text-xs font-semibold text-stone-500 hover:text-brand-600 transition-colors flex items-center gap-1">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Filters
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                    <!-- Search Input -->
+                    <div class="lg:col-span-2 relative">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400"></i>
+                        <input type="text" id="searchInput" placeholder="Search recipe name or cuisine..." 
+                               class="w-full pl-10 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                    </div>
+
+                    <!-- Diet Filter -->
+                    <div>
+                        <select id="dietSelect" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-semibold text-stone-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                            <option value="Any">Diet: Any</option>
+                            <option value="Vegetarian">Vegetarian</option>
+                            <option value="Vegan">Vegan</option>
+                            <option value="Non-Vegetarian">Non-Vegetarian</option>
+                        </select>
+                    </div>
+
+                    <!-- Cuisine Filter -->
+                    <div>
+                        <select id="cuisineSelect" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-semibold text-stone-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                            <option value="Any">Cuisine: Any</option>
+                            <option value="Indian">Indian</option>
+                            <option value="Italian">Italian</option>
+                            <option value="Mexican">Mexican</option>
+                            <option value="Chinese">Chinese</option>
+                            <option value="Japanese">Japanese</option>
+                            <option value="Continental">Continental</option>
+                        </select>
+                    </div>
+
+                    <!-- Meal Type Filter -->
+                    <div>
+                        <select id="mealSelect" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-semibold text-stone-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                            <option value="Any">Meal: Any</option>
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Lunch">Lunch</option>
+                            <option value="Dinner">Dinner</option>
+                            <option value="Snack">Snack</option>
+                        </select>
+                    </div>
+
+                    <!-- Difficulty Filter -->
+                    <div>
+                        <select id="difficultySelect" class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-semibold text-stone-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                            <option value="Any">Difficulty: Any</option>
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Max Cooking Time Slider Row -->
+                <div class="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-stone-50/70 p-4 rounded-2xl border border-stone-200/60">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="clock" class="w-4 h-4 text-brand-500"></i>
+                        <span class="text-xs font-bold text-stone-700">Max Cooking Time:</span>
+                        <span id="maxTimeLabel" class="text-xs font-extrabold text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200">60 mins</span>
+                    </div>
+                    <input type="range" id="timeSlider" min="10" max="90" step="5" value="60" 
+                           class="w-full sm:w-64 accent-brand-500 cursor-pointer">
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommendation Results Section -->
+        <section class="space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-extrabold tracking-tight text-stone-900">Recommended Recipes</h2>
+                    <p class="text-xs font-medium text-stone-500">Ranked based on ingredient match score and active filters</p>
+                </div>
+                <div id="resultsCounter" class="text-xs font-bold text-stone-600 bg-white border border-stone-200 px-3 py-1.5 rounded-full shadow-sm">
+                    Showing Top Recipes
+                </div>
+            </div>
+
+            <!-- Recipe Grid Container -->
+            <div id="recipeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Recipe Cards dynamically populated here -->
+            </div>
+
+            <!-- Empty State Container -->
+            <div id="emptyState" class="hidden bg-white rounded-3xl border border-dashed border-stone-300 p-12 text-center space-y-4 max-w-lg mx-auto">
+                <div class="w-16 h-16 bg-brand-50 text-brand-500 rounded-full flex items-center justify-center mx-auto">
+                    <i data-lucide="search-x" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-lg font-bold text-stone-900">No Matching Recipes Found</h3>
+                <p class="text-xs text-stone-500 leading-relaxed">
+                    We couldn't find recipes matching all selected parameters. Try clearing some filters, increasing max cooking time, or selecting more ingredients from your pantry.
+                </p>
+                <button id="emptyStateResetBtn" class="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-brand-500/20">
+                    Reset All Filters
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Detailed Recipe Modal View -->
+    <div id="recipeModal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-modal animate-fade-in relative max-h-[90vh] flex flex-col my-auto">
+            
+            <!-- Modal Header Hero Image -->
+            <div class="relative h-64 sm:h-72 shrink-0 bg-stone-900">
+                <img id="modalImage" src="" alt="Recipe Detail" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/40 to-transparent"></div>
+                
+                <!-- Close Button -->
+                <button id="closeModalBtn" class="absolute top-4 right-4 w-10 h-10 bg-black/40 hover:bg-black/70 backdrop-blur-md text-white rounded-full flex items-center justify-center transition-all border border-white/20">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Header Content over image -->
+                <div class="absolute bottom-6 left-6 right-6 text-white space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span id="modalMatchBadge" class="bg-brand-500 text-white text-xs font-extrabold px-3 py-1 rounded-full shadow-lg">
+                            100% Match
+                        </span>
+                        <span id="modalDietBadge" class="bg-white/20 backdrop-blur-md text-white border border-white/20 text-xs font-semibold px-3 py-1 rounded-full">
+                            Vegetarian
+                        </span>
+                    </div>
+                    <h2 id="modalTitle" class="text-2xl sm:text-3xl font-extrabold leading-tight">Recipe Name</h2>
+                </div>
+            </div>
+
+            <!-- Modal Scrollable Content -->
+            <div class="p-6 sm:p-8 space-y-6 overflow-y-auto">
+                
+                <!-- Quick Specs Row -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-stone-50 p-4 rounded-2xl border border-stone-200/60 text-center">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-stone-400 block">Cuisine</span>
+                        <span id="modalCuisine" class="text-xs font-bold text-stone-800">Italian</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-stone-400 block">Meal Type</span>
+                        <span id="modalMeal" class="text-xs font-bold text-stone-800">Dinner</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-stone-400 block">Cooking Time</span>
+                        <span id="modalTime" class="text-xs font-bold text-stone-800">25 mins</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-stone-400 block">Difficulty</span>
+                        <span id="modalDifficulty" class="text-xs font-bold text-stone-800">Easy</span>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <h4 class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">About Dish</h4>
+                    <p id="modalDescription" class="text-stone-600 text-sm leading-relaxed"></p>
+                </div>
+
+                <!-- Ingredients Checklist -->
+                <div>
+                    <h4 class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Complete Ingredients</h4>
+                    <div id="modalIngredientsList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <!-- Dynamic list items -->
+                    </div>
+                </div>
+
+                <!-- Step-by-step Instructions -->
+                <div>
+                    <h4 class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Step-by-Step Instructions</h4>
+                    <ol id="modalInstructionsList" class="space-y-3">
+                        <!-- Dynamic instructions steps -->
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Modal Footer Bar -->
+            <div class="p-4 bg-stone-50 border-t border-stone-100 flex justify-end shrink-0">
+                <button id="closeModalBottomBtn" class="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl transition-all">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simple Modern Footer -->
+    <footer class="bg-white border-t border-stone-200/80 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs font-medium text-stone-400">
+            Smart Food & Recipe Recommendation System &bull; Content-Based Pantry Logic Engine
+        </div>
+    </footer>
+
+    <script>
+        // --- PRESET RECIPES DATASET (Rich dataset with high-res Unsplash direct image URLs) ---
+        const recipesDataset = [
+            {
+                id: 1,
+                name: "Paneer Butter Masala",
+                cuisine: "Indian",
+                meal_type: "Lunch",
+                diet: "Vegetarian",
+                cooking_time: 30,
+                difficulty: "Medium",
+                description: "Rich and creamy curry made with cottage cheese cubes in a velvety tomato, butter, and cashew sauce.",
+                ingredients: ["paneer", "tomato", "butter", "cream", "garlic", "ginger", "onion", "chili powder", "garam masala"],
+                image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=80",
+                instructions: [
+                    "Sauté chopped onions, ginger, and garlic in butter until fragrant.",
+                    "Add pureed tomatoes and cook until oil separates.",
+                    "Blend cashews with water into a fine paste and stir into tomato base.",
+                    "Add garam masala, chili powder, and cream.",
+                    "Gently fold in paneer cubes and simmer for 5 minutes."
+                ]
+            },
+            {
+                id: 2,
+                name: "Classic Margherita Pizza",
+                cuisine: "Italian",
+                meal_type: "Dinner",
+                diet: "Vegetarian",
+                cooking_time: 25,
+                difficulty: "Easy",
+                description: "Crispy thin crust topped with tangy tomato sauce, fresh mozzarella cheese, and fragrant basil leaves.",
+                ingredients: ["flour", "yeast", "tomato", "mozzarella", "basil", "olive oil", "garlic"],
+                image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80",
+                instructions: [
+                    "Roll out pizza dough onto a lightly floured baking sheet.",
+                    "Spread seasoned tomato sauce evenly over the crust.",
+                    "Top with fresh mozzarella slices and garlic infused olive oil.",
+                    "Bake at high temperature (220°C) for 12-15 minutes until golden.",
+                    "Garnish with fresh basil leaves before serving."
+                ]
+            },
+            {
+                id: 3,
+                name: "Street Style Chicken Tacos",
+                cuisine: "Mexican",
+                meal_type: "Snack",
+                diet: "Non-Vegetarian",
+                cooking_time: 20,
+                difficulty: "Easy",
+                description: "Warm corn tortillas filled with spiced grilled chicken, fresh onion cilantro salsa, and tangy lime.",
+                ingredients: ["chicken", "tortilla", "onion", "cilantro", "lime", "garlic", "chili powder", "cumin"],
+                image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80",
+                instructions: [
+                    "Dice chicken breast and season with chili powder, cumin, garlic, and lime juice.",
+                    "Sear chicken in a hot skillet for 8-10 minutes until cooked through.",
+                    "Warm corn tortillas on a dry skillet.",
+                    "Assemble tacos with chicken, finely diced onion, and fresh cilantro."
+                ]
+            },
+            {
+                id: 4,
+                name: "Vegetable Fried Rice",
+                cuisine: "Chinese",
+                meal_type: "Lunch",
+                diet: "Vegetarian",
+                cooking_time: 15,
+                difficulty: "Easy",
+                description: "Aromatic jasmine rice stir-fried with crunchy diced vegetables, soy sauce, and green onions.",
+                ingredients: ["rice", "carrot", "peas", "soy sauce", "garlic", "green onion", "sesame oil", "bell pepper"],
+                image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=80",
+                instructions: [
+                    "Heat sesame oil in a wok over high heat.",
+                    "Add minced garlic and stir-fry diced carrots, peas, and bell peppers.",
+                    "Add cooked cold jasmine rice and toss rapidly.",
+                    "Drizzle soy sauce around edges and mix thoroughly until fragrant.",
+                    "Garnish generously with chopped green onions."
+                ]
+            },
+            {
+                id: 5,
+                name: "Tonkotsu Style Shoyu Ramen",
+                cuisine: "Japanese",
+                meal_type: "Dinner",
+                diet: "Non-Vegetarian",
+                cooking_time: 40,
+                difficulty: "Hard",
+                description: "Hearty Japanese noodle soup served in rich savory broth, soft boiled egg, scallions, and nori.",
+                ingredients: ["ramen noodles", "egg", "soy sauce", "garlic", "ginger", "green onion", "chicken broth", "sesame oil"],
+                image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=80",
+                instructions: [
+                    "Simmer chicken broth with garlic, ginger, and soy sauce for 20 minutes.",
+                    "Boil eggs for 6.5 minutes for soft yolk, then plunge in ice water.",
+                    "Cook ramen noodles according to package directions.",
+                    "Pour hot broth over noodles and garnish with egg halves and scallions."
+                ]
+            },
+            {
+                id: 6,
+                name: "Creamy Garlic Fettuccine Alfredo",
+                cuisine: "Italian",
+                meal_type: "Dinner",
+                diet: "Vegetarian",
+                cooking_time: 20,
+                difficulty: "Easy",
+                description: "Indulgent pasta tossed in a rich sauce made with real butter, heavy cream, garlic, and parmesan.",
+                ingredients: ["fettuccine", "butter", "cream", "parmesan", "garlic", "black pepper", "parsley"],
+                image: "https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&fit=crop&w=800&q=80",
+                instructions: [
+                    "Boil fettuccine pasta in salted water until al dente.",
+                    "Melt butter in pan and sauté garlic until fragrant.",
+                    "Pour heavy cream and bring to a gentle simmer.",
+                    "Stir in freshly grated parmesan until sauce thickens.",
+                    "Toss pasta in sauce and finish with cracked black pepper."
+                ]
+            },
+            {
+                id: 7,
+                name: "Chicken Tikka Skewers",
+                cuisine: "Indian",
+                meal_type: "Snack",
+                diet: "Non-Vegetarian",
+                cooking_time: 35,
+                difficulty: "Medium",
+                description: "Tender chicken pieces marinated in spiced yogurt and grilled to smoky perfection.",
+                ingredients: ["chicken", "yogurt", "lemon", "garlic", "ginger", "chili powder", "garam masala", "bell pepper"],
+                image: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=800&q=80",
+                instructions: [
+                    "Whisk yogurt, lemon juice, garlic, ginger, and spices together.",
+                    "Marinate chicken cubes for at least 30 minutes.",
+                    "Thread chicken and bell peppers onto skewers.",
+                    "Grill or bake at 200°C for 20 minutes until charred at edges."
+                ]
+            },
+            {
+                id: 8,
+                name: "Avocado & Tomato Toast",
+                cuisine: "Continental",
+                meal_type: "Breakfast",
+                diet: "Vegan",
+                cooking_time: 10,
+                difficulty: "Easy",
+                description: "Creamy mashed ripe avocado served on toasted artisanal bread with cherry tomatoes and olive oil.",
+                ingredients: ["bread", "avocado", "tomato", "olive oil", "lemon", "black pepper"],
+                image: "https://images.unsplash.com/photo-1588137378633-dea1336ce1e2?auto=format&fit=crop&w=800&q=80",
+                instructions: [
+                    "Toast artisanal bread slices until golden brown.",
+                    "Mash ripe avocado with lemon juice, salt, and black pepper.",
+                    "Spread avocado mixture over warm toast.",
+                    "Top with sliced cherry tomatoes and drizzle olive oil."
+                ]
+            }
+        ];
+
+        // --- APP STATE ---
+        let selectedIngredients = new Set(["tomato", "garlic", "onion"]);
+
+        // Pre-defined Quick Select Pantry List
+        const quickPantryIngredients = [
+            "tomato", "garlic", "onion", "paneer", "chicken", "butter", 
+            "cream", "rice", "cheese", "egg", "bread", "avocado", 
+            "soy sauce", "bell pepper", "basil", "flour"
+        ];
+
+        // --- DOM ELEMENTS ---
+        const ingredientPillsContainer = document.getElementById('ingredientPillsContainer');
+        const customIngredientInput = document.getElementById('customIngredientInput');
+        const addCustomIngredientBtn = document.getElementById('addCustomIngredientBtn');
+        const activeIngredientsBar = document.getElementById('activeIngredientsBar');
+        const activeTagsWrapper = document.getElementById('activeTagsWrapper');
+        const clearAllIngredientsBtn = document.getElementById('clearAllIngredientsBtn');
+
+        const searchInput = document.getElementById('searchInput');
+        const dietSelect = document.getElementById('dietSelect');
+        const cuisineSelect = document.getElementById('cuisineSelect');
+        const mealSelect = document.getElementById('mealSelect');
+        const difficultySelect = document.getElementById('difficultySelect');
+        const timeSlider = document.getElementById('timeSlider');
+        const maxTimeLabel = document.getElementById('maxTimeLabel');
+        const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+
+        const recipeGrid = document.getElementById('recipeGrid');
+        const emptyState = document.getElementById('emptyState');
+        const emptyStateResetBtn = document.getElementById('emptyStateResetBtn');
+        const resultsCounter = document.getElementById('resultsCounter');
+
+        // Modal Elements
+        const recipeModal = document.getElementById('recipeModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const closeModalBottomBtn = document.getElementById('closeModalBottomBtn');
+
+        // --- CONTENT-BASED RECOMMENDATION LOGIC ---
+        function calculateMatchesAndFilter() {
+            const query = searchInput.value.trim().toLowerCase();
+            const diet = dietSelect.value;
+            const cuisine = cuisineSelect.value;
+            const meal = mealSelect.value;
+            const difficulty = difficultySelect.value;
+            const maxTime = parseInt(timeSlider.value);
+
+            const userSet = new Set(Array.from(selectedIngredients).map(i => i.toLowerCase()));
+
+            // Filter & Rank Recipes
+            const results = recipesDataset.map(recipe => {
+                const recipeIngs = recipe.ingredients.map(i => i.toLowerCase());
+                const recipeSet = new Set(recipeIngs);
+
+                // Find matching and missing sets
+                const matched = recipeIngs.filter(ing => userSet.has(ing));
+                const missing = recipeIngs.filter(ing => !userSet.has(ing));
+
+                // Match percentage formula: (matched / total recipe ingredients) * 100
+                const matchScore = recipeSet.size > 0 
+                    ? Math.round((matched.length / recipeSet.size) * 100) 
+                    : 0;
+
+                return {
+                    ...recipe,
+                    matchScore,
+                    matchedIngredients: matched,
+                    missingIngredients: missing
+                };
+            }).filter(recipe => {
+                // Apply Categorical Filters
+                if (recipe.cooking_time > maxTime) return false;
+                if (diet !== "Any" && recipe.diet.toLowerCase() !== diet.toLowerCase()) return false;
+                if (cuisine !== "Any" && recipe.cuisine.toLowerCase() !== cuisine.toLowerCase()) return false;
+                if (meal !== "Any" && recipe.meal_type.toLowerCase() !== meal.toLowerCase()) return false;
+                if (difficulty !== "Any" && recipe.difficulty.toLowerCase() !== difficulty.toLowerCase()) return false;
+                
+                // Search query matching (name, cuisine, ingredients)
+                if (query) {
+                    const matchesName = recipe.name.toLowerCase().includes(query);
+                    const matchesCuisine = recipe.cuisine.toLowerCase().includes(query);
+                    const matchesIng = recipe.ingredients.some(i => i.toLowerCase().includes(query));
+                    if (!matchesName && !matchesCuisine && !matchesIng) return false;
+                }
+
+                return true;
+            });
+
+            // Sort by match score descending, then cooking time ascending
+            results.sort((a, b) => b.matchScore - a.matchScore || a.cooking_time - b.cooking_time);
+
+            renderRecipeCards(results);
+        }
+
+        // --- UI RENDER FUNCTIONS ---
+        function renderPantryPills() {
+            ingredientPillsContainer.innerHTML = '';
+            quickPantryIngredients.forEach(ing => {
+                const isSelected = selectedIngredients.has(ing);
+                const pill = document.createElement('button');
+                pill.className = `px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                    isSelected 
+                        ? 'bg-brand-500 text-white border-brand-500 shadow-sm shadow-brand-500/30' 
+                        : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border-stone-200/60'
+                }`;
+                pill.innerText = ing.charAt(0).toUpperCase() + ing.slice(1);
+                pill.onclick = () => toggleIngredient(ing);
+                ingredientPillsContainer.appendChild(pill);
+            });
+
+            renderActiveBar();
+        }
+
+        function renderActiveBar() {
+            if (selectedIngredients.size === 0) {
+                activeIngredientsBar.classList.add('hidden');
+                return;
+            }
+
+            activeIngredientsBar.classList.remove('hidden');
+            activeTagsWrapper.innerHTML = '';
+
+            selectedIngredients.forEach(ing => {
+                const tag = document.createElement('span');
+                tag.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 bg-stone-900 text-white rounded-lg text-xs font-medium';
+                tag.innerHTML = `
+                    ${ing}
+                    <button onclick="removeIngredient('${ing}')" class="hover:text-brand-300 text-stone-400">
+                        <i data-lucide="x" class="w-3 h-3"></i>
+                    </button>
+                `;
+                activeTagsWrapper.appendChild(tag);
+            });
+
+            lucide.createIcons();
+        }
+
+        function renderRecipeCards(recipes) {
+            recipeGrid.innerHTML = '';
+
+            if (recipes.length === 0) {
+                recipeGrid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                resultsCounter.innerText = "0 Recipes Found";
+                return;
+            }
+
+            recipeGrid.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            resultsCounter.innerText = `Showing Top ${recipes.length} Recipes`;
+
+            recipes.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-3xl border border-stone-200/80 overflow-hidden shadow-card hover:shadow-soft transition-all duration-300 flex flex-col group animate-fade-in";
+
+                // Ingredient Have / Missing tags
+                const matchedTags = recipe.matchedIngredients.length > 0
+                    ? recipe.matchedIngredients.map(i => `<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md text-[11px] font-semibold"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i> ${i}</span>`).join('')
+                    : `<span class="text-xs text-stone-400 font-medium">None matching</span>`;
+
+                const missingTags = recipe.missingIngredients.length > 0
+                    ? recipe.missingIngredients.map(i => `<span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-md text-[11px] font-semibold"><i data-lucide="x" class="w-3 h-3 text-rose-500"></i> ${i}</span>`).join('')
+                    : `<span class="text-xs text-emerald-600 font-semibold">Ready to cook!</span>`;
+
+                card.innerHTML = `
+                    <!-- Card Image Header -->
+                    <div class="relative h-48 overflow-hidden bg-stone-100">
+                        <img src="${recipe.image}" alt="${recipe.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-xs font-extrabold text-stone-900 shadow-md border border-stone-100 flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full ${recipe.matchScore > 50 ? 'bg-emerald-500' : 'bg-brand-500'}"></span>
+                            ${recipe.matchScore}% Match
+                        </div>
+                        <div class="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
+                            <span class="bg-stone-900/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">${recipe.cuisine}</span>
+                            <span class="bg-white/90 backdrop-blur-md text-stone-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">${recipe.meal_type}</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="p-6 flex-grow flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <h3 class="text-lg font-bold text-stone-900 group-hover:text-brand-600 transition-colors leading-snug">${recipe.name}</h3>
+                            <p class="text-xs text-stone-500 line-clamp-2 leading-relaxed">${recipe.description}</p>
+                        </div>
+
+                        <!-- Meta Info Row -->
+                        <div class="flex items-center justify-between text-xs text-stone-500 font-medium pt-1 border-t border-stone-100">
+                            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5 text-brand-500"></i> ${recipe.cooking_time} mins</span>
+                            <span class="flex items-center gap-1"><i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-brand-500"></i> ${recipe.difficulty}</span>
+                            <span class="flex items-center gap-1"><i data-lucide="leaf" class="w-3.5 h-3.5 text-emerald-500"></i> ${recipe.diet}</span>
+                        </div>
+
+                        <!-- Ingredients breakdown tags -->
+                        <div class="space-y-2 pt-2 border-t border-stone-100">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-stone-400 block mb-1">In your pantry:</span>
+                                <div class="flex flex-wrap gap-1">${matchedTags}</div>
+                            </div>
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-stone-400 block mb-1">Missing:</span>
+                                <div class="flex flex-wrap gap-1">${missingTags}</div>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <button onclick="openModal(${recipe.id}, ${recipe.matchScore})" 
+                                class="w-full mt-2 py-2.5 bg-stone-900 hover:bg-brand-500 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm">
+                            <span>View Recipe</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
+
+                recipeGrid.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        // --- MODAL CONTROLLER ---
+        function openModal(recipeId, matchScore) {
+            const recipe = recipesDataset.find(r => r.id === recipeId);
+            if (!recipe) return;
+
+            document.getElementById('modalImage').src = recipe.image;
+            document.getElementById('modalTitle').innerText = recipe.name;
+            document.getElementById('modalMatchBadge').innerText = `${matchScore}% Match Score`;
+            document.getElementById('modalDietBadge').innerText = recipe.diet;
+            document.getElementById('modalCuisine').innerText = recipe.cuisine;
+            document.getElementById('modalMeal').innerText = recipe.meal_type;
+            document.getElementById('modalTime').innerText = `${recipe.cooking_time} mins`;
+            document.getElementById('modalDifficulty').innerText = recipe.difficulty;
+            document.getElementById('modalDescription').innerText = recipe.description;
+
+            // Render modal ingredients checklist
+            const modalIngredientsList = document.getElementById('modalIngredientsList');
+            modalIngredientsList.innerHTML = recipe.ingredients.map(ing => {
+                const userSet = new Set(Array.from(selectedIngredients).map(i => i.toLowerCase()));
+                const hasItem = userSet.has(ing.toLowerCase());
+
+                return `
+                    <div class="flex items-center gap-2 text-xs font-medium ${hasItem ? 'text-stone-900 font-semibold' : 'text-stone-500'}">
+                        <div class="w-4 h-4 rounded-md flex items-center justify-center ${hasItem ? 'bg-emerald-500 text-white' : 'bg-stone-200 text-stone-400'}">
+                            <i data-lucide="${hasItem ? 'check' : 'x'}" class="w-3 h-3"></i>
+                        </div>
+                        <span class="capitalize">${ing}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Render modal instructions
+            const modalInstructionsList = document.getElementById('modalInstructionsList');
+            modalInstructionsList.innerHTML = recipe.instructions.map((step, idx) => `
+                <li class="flex items-start gap-3 text-xs text-stone-700 leading-relaxed">
+                    <span class="w-5 h-5 rounded-full bg-brand-50 text-brand-600 font-bold flex items-center justify-center shrink-0 border border-brand-200 text-[11px]">
+                        ${idx + 1}
+                    </span>
+                    <span class="pt-0.5">${step}</span>
+                </li>
+            `).join('');
+
+            recipeModal.classList.remove('hidden');
+            recipeModal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            recipeModal.classList.add('hidden');
+            recipeModal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        // --- INGREDIENT ACTIONS ---
+        function toggleIngredient(ing) {
+            if (selectedIngredients.has(ing)) {
+                selectedIngredients.delete(ing);
+            } else {
+                selectedIngredients.add(ing);
+            }
+            renderPantryPills();
+            calculateMatchesAndFilter();
+        }
+
+        function removeIngredient(ing) {
+            selectedIngredients.delete(ing);
+            renderPantryPills();
+            calculateMatchesAndFilter();
+        }
+
+        function addCustomIngredient() {
+            const val = customIngredientInput.value.trim().toLowerCase();
+            if (val) {
+                const items = val.split(',').map(i => i.trim()).filter(i => i.length > 0);
+                items.forEach(i => selectedIngredients.add(i));
+                customIngredientInput.value = '';
+                renderPantryPills();
+                calculateMatchesAndFilter();
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        addCustomIngredientBtn.onclick = addCustomIngredient;
+        customIngredientInput.onkeydown = (e) => {
+            if (e.key === 'Enter') addCustomIngredient();
+        };
+
+        clearAllIngredientsBtn.onclick = () => {
+            selectedIngredients.clear();
+            renderPantryPills();
+            calculateMatchesAndFilter();
+        };
+
+        timeSlider.oninput = (e) => {
+            maxTimeLabel.innerText = `${e.target.value} mins`;
+            calculateMatchesAndFilter();
+        };
+
+        // Filter Controls Listeners
+        [searchInput, dietSelect, cuisineSelect, mealSelect, difficultySelect].forEach(el => {
+            el.oninput = calculateMatchesAndFilter;
+            el.onchange = calculateMatchesAndFilter;
+        });
+
+        resetFiltersBtn.onclick = resetAllFilters;
+        emptyStateResetBtn.onclick = resetAllFilters;
+
+        function resetAllFilters() {
+            searchInput.value = '';
+            dietSelect.value = 'Any';
+            cuisineSelect.value = 'Any';
+            mealSelect.value = 'Any';
+            difficultySelect.value = 'Any';
+            timeSlider.value = 60;
+            maxTimeLabel.innerText = '60 mins';
+            selectedIngredients.clear();
+            renderPantryPills();
+            calculateMatchesAndFilter();
+        }
+
+        closeModalBtn.onclick = closeModal;
+        closeModalBottomBtn.onclick = closeModal;
+        recipeModal.onclick = (e) => {
+            if (e.target === recipeModal) closeModal();
+        };
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            renderPantryPills();
+            calculateMatchesAndFilter();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
